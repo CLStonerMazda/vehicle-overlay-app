@@ -5,13 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Vehicle Overlay Camera</title>
   <style>
-    html, body {
+    body {
       margin: 0;
       padding: 0;
       background: black;
       font-family: sans-serif;
       color: white;
       text-align: center;
+    }
+
+    h2 {
+      margin-top: 10px;
+    }
+
+    #vehicleType {
+      margin: 10px auto;
+      font-size: 16px;
+      padding: 6px;
     }
 
     #camera-container {
@@ -24,6 +34,7 @@
       overflow: hidden;
       background: black;
       touch-action: none;
+      display: block;
     }
 
     video, #overlay, #flash {
@@ -61,16 +72,8 @@
       100% { opacity: 0; }
     }
 
-    #vehicleType {
-      margin: 10px auto;
-      font-size: 16px;
-      padding: 6px;
-      display: block;
-    }
-
     #photo-container {
       display: none;
-      text-align: center;
       background: black;
       padding: 20px;
     }
@@ -92,6 +95,17 @@
 
     canvas {
       display: none;
+    }
+
+    #retake {
+      margin-top: 20px;
+      font-size: 16px;
+      background: white;
+      color: black;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -116,6 +130,8 @@
     <img id="snapshot" alt="Captured Image" />
     <br />
     <a id="download-link" download="vehicle_photo.png">⬇️ Save Image</a>
+    <br />
+    <button id="retake">🔄 Retake Photo</button>
   </div>
 
   <canvas id="canvas"></canvas>
@@ -130,6 +146,7 @@
     const flash = document.getElementById("flash");
     const container = document.getElementById("camera-container");
     const photoContainer = document.getElementById("photo-container");
+    const retakeBtn = document.getElementById("retake");
 
     let holdTimer = null;
 
@@ -156,6 +173,11 @@
     }
 
     function takeSnapshot() {
+      if (!video.videoWidth || !video.videoHeight) {
+        alert("Camera not ready. Please try again.");
+        return;
+      }
+
       triggerFlash();
 
       const context = canvas.getContext("2d");
@@ -188,11 +210,18 @@
       }
     }
 
+    function retakePhoto() {
+      photoContainer.style.display = "none";
+      container.style.display = "block";
+    }
+
     container.addEventListener("touchstart", startHoldTimer);
     container.addEventListener("mousedown", startHoldTimer);
     container.addEventListener("touchend", cancelHoldTimer);
     container.addEventListener("mouseup", cancelHoldTimer);
     container.addEventListener("mouseleave", cancelHoldTimer);
+
+    retakeBtn.addEventListener("click", retakePhoto);
 
     startCamera();
     updateOverlay();
