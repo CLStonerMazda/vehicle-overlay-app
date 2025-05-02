@@ -2,25 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Vehicle Overlay Camera</title>
   <style>
-    body {
+    html, body {
       margin: 0;
-      font-family: sans-serif;
+      padding: 0;
       background: black;
+      font-family: sans-serif;
       color: white;
       text-align: center;
-    }
-
-    h2 {
-      margin-top: 10px;
-    }
-
-    #vehicleType {
-      margin: 10px;
-      font-size: 16px;
-      padding: 6px;
     }
 
     #camera-container {
@@ -31,11 +22,11 @@
       aspect-ratio: 3 / 4;
       margin: 0 auto;
       overflow: hidden;
-      touch-action: none;
       background: black;
+      touch-action: none;
     }
 
-    video, #overlay {
+    video, #overlay, #flash {
       position: absolute;
       top: 0;
       left: 0;
@@ -55,11 +46,6 @@
     }
 
     #flash {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
       background: white;
       opacity: 0;
       z-index: 5;
@@ -73,6 +59,35 @@
     @keyframes flash-blink {
       0% { opacity: 1; }
       100% { opacity: 0; }
+    }
+
+    #vehicleType {
+      margin: 10px auto;
+      font-size: 16px;
+      padding: 6px;
+      display: block;
+    }
+
+    #photo-container {
+      display: none;
+      text-align: center;
+      background: black;
+      padding: 20px;
+    }
+
+    #snapshot {
+      max-width: 95vw;
+      max-height: 80vh;
+      border: 2px solid white;
+    }
+
+    #download-link {
+      display: inline-block;
+      margin-top: 15px;
+      font-size: 18px;
+      color: #0ff;
+      font-weight: bold;
+      text-decoration: underline;
     }
 
     canvas {
@@ -96,6 +111,13 @@
     <div id="flash"></div>
   </div>
 
+  <div id="photo-container">
+    <h3>Captured Photo</h3>
+    <img id="snapshot" alt="Captured Image" />
+    <br />
+    <a id="download-link" download="vehicle_photo.png">⬇️ Save Image</a>
+  </div>
+
   <canvas id="canvas"></canvas>
 
   <script>
@@ -103,25 +125,20 @@
     const overlay = document.getElementById("overlay");
     const vehicleType = document.getElementById("vehicleType");
     const canvas = document.getElementById("canvas");
+    const snapshot = document.getElementById("snapshot");
+    const downloadLink = document.getElementById("download-link");
     const flash = document.getElementById("flash");
     const container = document.getElementById("camera-container");
+    const photoContainer = document.getElementById("photo-container");
 
     let holdTimer = null;
-    let cameraReady = false;
 
     async function startCamera() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" }
-        });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         video.srcObject = stream;
-
-        video.onloadedmetadata = () => {
-          cameraReady = true;
-          console.log("Camera ready:", video.videoWidth, video.videoHeight);
-        };
       } catch (err) {
-        alert("Camera access denied or not available.");
+        alert("Camera access was denied or is not available.");
         console.error(err);
       }
     }
@@ -139,11 +156,6 @@
     }
 
     function takeSnapshot() {
-      if (!cameraReady || !video.videoWidth || !video.videoHeight) {
-        alert("Camera is not ready yet. Please wait a moment.");
-        return;
-      }
-
       triggerFlash();
 
       const context = canvas.getContext("2d");
@@ -152,24 +164,11 @@
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const dataURL = canvas.toDataURL("image/png");
-      openImagePage(dataURL);
-    }
+      snapshot.src = dataURL;
+      downloadLink.href = dataURL;
 
-    function openImagePage(dataURL) {
-      const html = `
-        <html>
-        <head><title>Captured Photo</title></head>
-        <body style="background:black;text-align:center;color:white;font-family:sans-serif;">
-          <h2>Captured Photo</h2>
-          <img src="${dataURL}" style="max-width:95vw;max-height:80vh;border:2px solid white;" />
-          <br><br>
-          <a href="${dataURL}" download="vehicle_photo.png" style="font-size:20px;color:#0ff;text-decoration:underline;">⬇️ Save Image</a>
-        </body>
-        </html>
-      `;
-      const newTab = window.open();
-      newTab.document.write(html);
-      newTab.document.close();
+      container.style.display = "none";
+      photoContainer.style.display = "block";
     }
 
     function startHoldTimer() {
@@ -178,7 +177,7 @@
         takeSnapshot();
         overlay.style.visibility = 'visible';
         holdTimer = null;
-      }, 2000); // 2 second hold
+      }, 2000);
     }
 
     function cancelHoldTimer() {
