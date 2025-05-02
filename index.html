@@ -74,61 +74,6 @@
     canvas {
       display: none;
     }
-
-    /* Thumbnail */
-    #thumbnail {
-      display: none;
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 80px;
-      height: 100px;
-      object-fit: cover;
-      border: 2px solid white;
-      cursor: pointer;
-      z-index: 10;
-    }
-
-    /* Fullscreen viewer */
-    #photo-viewer {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: black;
-      text-align: center;
-      padding-top: 20px;
-      z-index: 20;
-    }
-
-    #full-photo {
-      max-width: 90vw;
-      max-height: 80vh;
-      border: 2px solid white;
-    }
-
-    #download-link {
-      display: inline-block;
-      margin-top: 15px;
-      font-size: 18px;
-      color: #0ff;
-      font-weight: bold;
-      text-decoration: underline;
-    }
-
-    #close-viewer {
-      position: fixed;
-      top: 10px;
-      right: 15px;
-      font-size: 24px;
-      font-weight: bold;
-      background: transparent;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
@@ -148,25 +93,14 @@
   </div>
 
   <canvas id="canvas"></canvas>
-  <img id="thumbnail" alt="Thumbnail Preview" onclick="openPhotoViewer()" />
-
-  <div id="photo-viewer">
-    <button id="close-viewer" onclick="closePhotoViewer()">✕</button>
-    <img id="full-photo" alt="Captured Image" />
-    <br />
-    <a id="download-link" download="vehicle_photo.png">⬇️ Save Image</a>
-  </div>
 
   <script>
     const video = document.getElementById("video");
     const overlay = document.getElementById("overlay");
     const vehicleType = document.getElementById("vehicleType");
     const canvas = document.getElementById("canvas");
-    const thumbnail = document.getElementById("thumbnail");
-    const fullPhoto = document.getElementById("full-photo");
-    const downloadLink = document.getElementById("download-link");
     const flash = document.getElementById("flash");
-    const photoViewer = document.getElementById("photo-viewer");
+    const container = document.getElementById("camera-container");
 
     let holdTimer = null;
 
@@ -201,12 +135,24 @@
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const dataURL = canvas.toDataURL("image/png");
+      openImagePage(dataURL);
+    }
 
-      // Set thumbnail and full viewer content
-      thumbnail.src = dataURL;
-      fullPhoto.src = dataURL;
-      downloadLink.href = dataURL;
-      thumbnail.style.display = "block";
+    function openImagePage(dataURL) {
+      const html = `
+        <html>
+        <head><title>Captured Photo</title></head>
+        <body style="background:black;text-align:center;color:white;font-family:sans-serif;">
+          <h2>Captured Photo</h2>
+          <img src="${dataURL}" style="max-width:95vw;max-height:80vh;border:2px solid white;" />
+          <br><br>
+          <a href="${dataURL}" download="vehicle_photo.png" style="font-size:20px;color:#0ff;text-decoration:underline;">⬇️ Save Image</a>
+        </body>
+        </html>
+      `;
+      const newWindow = window.open();
+      newWindow.document.write(html);
+      newWindow.document.close();
     }
 
     function startHoldTimer() {
@@ -226,23 +172,14 @@
       }
     }
 
-    function openPhotoViewer() {
-      photoViewer.style.display = "block";
-    }
-
-    function closePhotoViewer() {
-      photoViewer.style.display = "none";
-    }
-
-    document.getElementById("camera-container").addEventListener("touchstart", startHoldTimer);
-    document.getElementById("camera-container").addEventListener("mousedown", startHoldTimer);
-    document.getElementById("camera-container").addEventListener("touchend", cancelHoldTimer);
-    document.getElementById("camera-container").addEventListener("mouseup", cancelHoldTimer);
-    document.getElementById("camera-container").addEventListener("mouseleave", cancelHoldTimer);
+    container.addEventListener("touchstart", startHoldTimer);
+    container.addEventListener("mousedown", startHoldTimer);
+    container.addEventListener("touchend", cancelHoldTimer);
+    container.addEventListener("mouseup", cancelHoldTimer);
+    container.addEventListener("mouseleave", cancelHoldTimer);
 
     startCamera();
     updateOverlay();
   </script>
 </body>
 </html>
-
