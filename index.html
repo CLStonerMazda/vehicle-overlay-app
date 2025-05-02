@@ -13,6 +13,16 @@
       text-align: center;
     }
 
+    h2 {
+      margin-top: 10px;
+    }
+
+    #vehicleType {
+      margin: 10px;
+      font-size: 16px;
+      padding: 6px;
+    }
+
     #camera-container {
       position: relative;
       width: 100%;
@@ -65,12 +75,6 @@
       100% { opacity: 0; }
     }
 
-    #vehicleType {
-      margin: 10px;
-      font-size: 16px;
-      padding: 6px;
-    }
-
     canvas {
       display: none;
     }
@@ -103,13 +107,21 @@
     const container = document.getElementById("camera-container");
 
     let holdTimer = null;
+    let cameraReady = false;
 
     async function startCamera() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" }
+        });
         video.srcObject = stream;
+
+        video.onloadedmetadata = () => {
+          cameraReady = true;
+          console.log("Camera ready:", video.videoWidth, video.videoHeight);
+        };
       } catch (err) {
-        alert("Camera access was denied or is not available.");
+        alert("Camera access denied or not available.");
         console.error(err);
       }
     }
@@ -127,6 +139,11 @@
     }
 
     function takeSnapshot() {
+      if (!cameraReady || !video.videoWidth || !video.videoHeight) {
+        alert("Camera is not ready yet. Please wait a moment.");
+        return;
+      }
+
       triggerFlash();
 
       const context = canvas.getContext("2d");
@@ -150,9 +167,9 @@
         </body>
         </html>
       `;
-      const newWindow = window.open();
-      newWindow.document.write(html);
-      newWindow.document.close();
+      const newTab = window.open();
+      newTab.document.write(html);
+      newTab.document.close();
     }
 
     function startHoldTimer() {
@@ -161,7 +178,7 @@
         takeSnapshot();
         overlay.style.visibility = 'visible';
         holdTimer = null;
-      }, 2000);
+      }, 2000); // 2 second hold
     }
 
     function cancelHoldTimer() {
