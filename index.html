@@ -2,12 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vehicle Overlay Camera</title>
   <style>
     body {
       margin: 0;
-      padding: 0;
       background: black;
       font-family: sans-serif;
       color: white;
@@ -15,7 +14,7 @@
     }
 
     h2 {
-      margin-top: 10px;
+      margin: 10px 0;
     }
 
     #vehicleType {
@@ -27,14 +26,12 @@
     #camera-container {
       position: relative;
       width: 100%;
+      height: 75vh;
       max-width: 100vw;
-      height: auto;
-      aspect-ratio: 3 / 4;
       margin: 0 auto;
       overflow: hidden;
       background: black;
       touch-action: none;
-      display: block;
     }
 
     video, #overlay, #flash {
@@ -154,6 +151,10 @@
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         video.srcObject = stream;
+
+        video.onloadedmetadata = () => {
+          video.play(); // Ensures it starts after ready
+        };
       } catch (err) {
         alert("Camera access was denied or is not available.");
         console.error(err);
