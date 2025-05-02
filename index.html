@@ -32,6 +32,7 @@
       overflow: hidden;
       background: black;
       touch-action: none;
+      display: block;
     }
 
     video, #overlay, #flash {
@@ -146,17 +147,22 @@
     const retakeBtn = document.getElementById("retake");
 
     let holdTimer = null;
+    let cameraReady = false;
 
     async function startCamera() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" }
+        });
         video.srcObject = stream;
 
         video.onloadedmetadata = () => {
-          video.play(); // Ensures it starts after ready
+          video.play();
+          cameraReady = true;
+          console.log("Camera ready.");
         };
       } catch (err) {
-        alert("Camera access was denied or is not available.");
+        alert("Camera access was denied or not available.");
         console.error(err);
       }
     }
@@ -174,8 +180,8 @@
     }
 
     function takeSnapshot() {
-      if (!video.videoWidth || !video.videoHeight) {
-        alert("Camera not ready. Please try again.");
+      if (!cameraReady || !video.videoWidth || !video.videoHeight) {
+        alert("Camera is not ready yet. Please wait a moment.");
         return;
       }
 
@@ -200,7 +206,7 @@
         takeSnapshot();
         overlay.style.visibility = 'visible';
         holdTimer = null;
-      }, 1000);
+      }, 500); // Hold for 0.5 seconds
     }
 
     function cancelHoldTimer() {
