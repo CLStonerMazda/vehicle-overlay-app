@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vehicle Overlay Camera</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #000;
+      color: white;
+      text-align: center;
+    }
+
+    select {
+      margin: 10px;
+      padding: 6px;
+      font-size: 16px;
+    }
+
+    #camera-container {
+      position: relative;
+      width: 100%;
+      max-width: 100vw;
+      height: calc(100vw * 4 / 3);
+      margin-top: 10px;
+    }
+
+    video, #overlay {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      object-fit: cover;
+    }
+
+    #overlay {
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    video {
+      z-index: 1;
+    }
+
+    canvas {
+      display: none;
+    }
+
+    #snapshot {
+      display: none;
+      max-width: 100%;
+      margin-top: 10px;
+      border: 2px solid white;
+    }
+
+    #download-link {
+      display: none;
+      color: #0ff;
+      font-weight: bold;
+      text-decoration: underline;
+    }
+
+    h2, select {
+      z-index: 10;
+      position: relative;
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Vehicle Overlay Camera</h2>
+
+  <label for="vehicleType">Vehicle Type:</label>
+  <select id="vehicleType">
+    <option value="car">Car</option>
+    <option value="truck">Truck</option>
+    <option value="suv">SUV</option>
+  </select>
+
+  <div id="camera-container" onclick="takeSnapshot()">
+    <video id="video" autoplay playsinline muted></video>
+    <img id="overlay" src="car.png" alt="Overlay" />
+  </div>
+
+  <canvas id="canvas"></canvas>
+  <img id="snapshot" alt="Captured Image" />
+  <br/>
+  <a id="download-link" download="vehicle_photo.png">⬇️ Save Image</a>
+
+  <script>
+    const video = document.getElementById("video");
+    const overlay = document.getElementById("overlay");
+    const vehicleType = document.getElementById("vehicleType");
+    const canvas = document.getElementById("canvas");
+    const snapshot = document.getElementById("snapshot");
+    const downloadLink = document.getElementById("download-link");
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        video.srcObject = stream;
+      } catch (err) {
+        alert("Camera access was denied or is not available.");
+        console.error(err);
+      }
+    }
+
+    function updateOverlay() {
+      overlay.src = `${vehicleType.value}.png`;
+    }
+
+    vehicleType.addEventListener("change", updateOverlay);
+
+    function takeSnapshot() {
+      const context = canvas.getContext("2d");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const img = new Image();
+      img.onload = function () {
+        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const dataURL = canvas.toDataURL("image/png");
+        snapshot.src = dataURL;
+        snapshot.style.display = "block";
+        downloadLink.href = dataURL;
+        downloadLink.style.display = "inline";
+      };
+      img.src = overlay.src;
+    }
+
+    startCamera();
+    updateOverlay();
+  </script>
+</body>
+</html>
